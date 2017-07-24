@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<operations>
+	<operation name="sayHi">
+		<parameter mode="parameter" name="greet" type="string" />
+		<parameter mode="parameter" name="name" type="string" />
+		<parameter mode="result" name="return" type="string" />
+	</operation>
+	<operation name="revert">
+		<parameter mode="parameter" name="num" type="int" />
+	</operation>
+	<operation name="plus">
+		<parameter mode="parameter" name="arg0" type="int" />
+		<parameter mode="parameter" name="arg1" type="int" />
+		<parameter mode="result" name="return" type="int" />
+	</operation>
+</operations>

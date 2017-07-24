@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="40" height="40"
+		 xmlns:flow="com.starflow.components.*" creationComplete="init()">
+	<s:layout>
+		<s:VerticalLayout horizontalAlign="center"/>
+	</s:layout>
+	
+	<fx:Metadata>
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.starflow.core.support.ActMenuBuilder;
+			import com.starflow.core.support.RightClickManager;
+			import com.starflow.core.util.Flow;
+			import com.starflow.model.Activity;
+			
+			//[Inspectable(defaultValue="", type="Number", name="boardSize", format="Number")]
+			[Bindable]
+			public var source:String;
+			
+			[Bindable]
+			public var toolTipText:String = "";
+			
+			[Bindable]
+			public var text:String;
+			public var activity:Activity = null;
+			
+			private function init():void {
+				if(!Flow.isViewFlow)
+					this.addEventListener(RightClickManager.RIGHT_CLICK, ActMenuBuilder.getInstance().rightClickHandler);
+			}
+		]]>
+	</fx:Script>
+	
+	<flow:FocusImage id="actImage" source="{source}" toolTip="{toolTipText}"/>
+	<flow:EditableLabel text="@{text}" />
+</s:Group>

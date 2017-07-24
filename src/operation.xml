@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>   
+<node>   
+	<node id="1" code="SG" name="申告" displayName="申告" />
+	<node id="2" code="CL" name="处理" displayName="处理" />
+</node>

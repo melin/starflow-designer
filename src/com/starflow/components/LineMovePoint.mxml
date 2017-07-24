@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="6" height="6" 
+		 mouseOver="mouseOverHandler(event)"
+		 mouseOut="mouseOutHandler(event)" 
+		 click="clickHandler(event)"
+		 initialize="initializeHandler(event)" currentState="normal" width.hovered="6" height.hovered="6">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+
+	<fx:Script>
+		<![CDATA[
+			import com.starflow.core.support.TenCursor;
+			import com.starflow.core.util.Flow;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.CursorManagerPriority;
+			
+			/* 下面三个属性，用于设置连线移动点的位置
+			   如果设置point值，则在point点设置移动点
+			   如果设置startPoint和endPoint，则在这两点之间添加一个移动点
+			   
+			   index为移动节点，在连线开始到结束方向上的索引位置
+			*/
+			[Inspectable]
+			public var point:Point;
+			
+			[Inspectable]
+			public var startPoint:Point;
+			
+			[Inspectable]
+			public var finishPoint:Point;
+			
+			[Inspectable]
+			public var index:int;
+			
+			[Inspectable]
+			public var isVisual:Boolean = false;
+			
+			protected function initializeHandler(event:FlexEvent):void {
+				if(point != null) {
+					this.x = point.x - 3;
+					this.y = point.y - 3;
+				} else if(startPoint != null && finishPoint != null) {
+					this.x = (finishPoint.x + startPoint.x)/2 - 3;
+					this.y = (finishPoint.y + startPoint.y)/2 - 3;
+				}
+			}
+
+			protected function mouseOverHandler(event:MouseEvent):void {
+				this.addEventListener(MouseEvent.MOUSE_OVER, function():void{
+					CursorManager.setCursor(TenCursor, CursorManagerPriority.HIGH, -8, -9);
+				});
+			}
+
+
+			protected function mouseOutHandler(event:MouseEvent):void {
+				this.addEventListener(MouseEvent.MOUSE_OUT, function():void{
+					CursorManager.removeAllCursors();
+				});
+			}
+			
+			protected function clickHandler(event:MouseEvent):void {
+				event.stopPropagation();
+				if(!this.isVisual && this.index != 0 && this.index != (Flow.getLineMovePoint().length-1)) {
+					if(Flow.currentMovePoint != null)
+						Flow.currentMovePoint.currentState = "normal";
+					this.currentState = "hovered";
+					Flow.currentMovePoint = this;
+				}
+			}
+
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="normal"/>
+		<s:State name="hovered"/>
+	</s:states>
+	
+	<s:Rect width="5" height="5">
+		<s:fill>
+			<s:SolidColor color="0x527AB8" />
+		</s:fill>
+		<s:stroke>
+			<s:SolidColorStroke color="0xFFFFFF" weight="1"/>   
+		</s:stroke>
+	</s:Rect>
+	
+	<s:Rect width.hovered="5" height.hovered="5">
+		<s:fill>
+			<s:SolidColor color="red" />
+		</s:fill>
+		<s:stroke>
+			<s:SolidColorStroke color="0xFFFFFF" weight="1"/>   
+		</s:stroke>
+	</s:Rect>
+</s:Group>

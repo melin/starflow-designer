@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<activities>
+	<transctrls>
+		<transctrl srcId="act_start" destId="Act_1" />
+		<transctrl srcId="Act_1" destId="Act_3" />
+		<transctrl srcId="Act_3" destId="act_finish" />
+	</transctrls>
+	<noFinishActs>
+		<activity id="Act_3" status="10"/>
+	</noFinishActs>
+</activities>

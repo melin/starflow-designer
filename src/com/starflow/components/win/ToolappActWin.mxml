@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="600" height="400"
+		 creationComplete="init()">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.starflow.components.ActImage;
+			import com.starflow.core.support.ValidateProcessDefine;
+			import com.starflow.core.support.WindowManager;
+			import com.starflow.core.util.ExtendNodeHelper;
+			import com.starflow.core.util.Flow;
+			import com.starflow.core.util.TriggerEventHelper;
+			import com.starflow.model.ToolAppActivity;
+			
+			import mx.collections.ArrayCollection;
+			import mx.core.FlexGlobals;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.http.HTTPService;
+			
+			public static var instance:ToolappActWin = new ToolappActWin;
+			private var activity:ToolAppActivity;
+			private static var act:ActImage;
+			
+			private static function resultActivateRuleHandler(event:ResultEvent):void {
+				var result:XML = XML(event.result);  
+				var nodes:XMLList = result..node;
+				var node:XML = null;  
+				Flow.activateRules = new ArrayCollection();
+				Flow.activateRules.addItem({name:"请选择...", id:""});
+				for each (node in nodes) {
+					var obj:Object = new Object();
+					obj.id = node.@value;
+					obj.name = node.@value;
+					Flow.activateRules.addItem(obj);
+				}
+				instance.startStrategybyAppActionID.dataProvider = Flow.activateRules;
+				
+				//设置选择值
+				var _action:String = instance.activity.startStrategybyAppAction;
+				if(_action != "") {
+					var len1:int = Flow.activateRules.length;
+					for(var i1:int=0; i1<len1; i1++) {
+						if(Flow.activateRules.getItemAt(i1).id == _action) {
+							instance.startStrategybyAppActionID.selectedIndex = i1;
+							break;
+						}
+					}
+				} else
+					instance.startStrategybyAppActionID.selectedIndex=0;
+			}
+			
+			private static function resultExecuteActionHandler(event:ResultEvent):void {
+				var result:XML = XML(event.result);  
+				var nodes:XMLList = result..node;
+				var node:XML = null;  
+				Flow.executeActions = new ArrayCollection();
+				Flow.executeActions.addItem({name:"请选择...", id:""});
+				for each (node in nodes) {
+					var obj:Object = new Object();
+					obj.id = node.@value;
+					obj.name = node.@value;
+					Flow.executeActions.addItem(obj);
+				}
+				instance.executeAction.dataProvider = Flow.executeActions;
+				
+				//设置选择值
+				var _action:String = instance.activity.executeAction;
+				if(_action != "") {
+					var len1:int = Flow.executeActions.length;
+					for(var i1:int=0; i1<len1; i1++) {
+						if(Flow.executeActions.getItemAt(i1).id == _action) {
+							instance.executeAction.selectedIndex = i1;
+							break;
+						}
+					}
+				} else
+					instance.executeAction.selectedIndex=0;
+			}
+			
+			private static function resultExceptionActionHandler(event:ResultEvent):void {
+				var result:XML = XML(event.result);  
+				var nodes:XMLList = result..node;
+				var node:XML = null;  
+				Flow.exceptionActions = new ArrayCollection();
+				Flow.exceptionActions.addItem({name:"请选择...", id:""});
+				for each (node in nodes) {
+					var obj:Object = new Object();
+					obj.id = node.@value;
+					obj.name = node.@value;
+					Flow.exceptionActions.addItem(obj);
+				}
+				instance.exceptionActionID.dataProvider = Flow.exceptionActions;
+				
+				//设置选择值
+				var _action:String = instance.activity.exceptionAction;
+				if(_action != "") {
+					var len1:int = Flow.exceptionActions.length;
+					for(var i1:int=0; i1<len1; i1++) {
+						if(Flow.exceptionActions.getItemAt(i1).id == _action) {
+							instance.exceptionActionID.selectedIndex = i1;
+							break;
+						}
+					}
+				} else
+					instance.exceptionActionID.selectedIndex=0;
+			}
+			
+			public static function show():void {
+				WindowManager.show(instance);
+				instance.activity = Flow.rcAct.activity as ToolAppActivity;
+				instance.tabNavigatorID.selectedIndex=0;
+				
+				//------------------------------基本属性-------------------------------
+				instance.actId.text = Flow.rcAct.id;
+				instance.actName.text = Flow.rcAct.text;
+				instance.description.text = Flow.rcAct.activity.description;
+				instance.joinID.enabled = true;
+				instance.joinID.selected = true;
+				
+				if(instance.activity.splitMode == "OR")
+					instance.splitOR.selected = true;
+				else if(instance.activity.splitMode == "AND")
+					instance.splitAND.selected = true;
+				else
+					instance.splitXOR.selected = true
+				
+				if(instance.activity.joinMode == "OR")
+					instance.joinOR.selected = true;
+				else if(instance.activity.joinMode == "AND")
+					instance.joinAND.selected = true;
+				else
+					instance.joinXOR.selected = true;
+				
+				//------------------------------触发事件-------------------------------
+				instance.eventGrid.dataProvider = instance.activity.triggerEvents;
+				
+				//------------------------------扩展属性-------------------------------
+				instance.extendNodeGrid.dataProvider = instance.activity.extendNodes;
+				
+				//------------------------------高级属性-------------------------------
+				if(Flow.executeActions == null) {
+					var httpService:HTTPService = new HTTPService();
+					httpService.addEventListener(ResultEvent.RESULT, resultExecuteActionHandler);
+					httpService.resultFormat = "xml";
+					var flashvars:Object = FlexGlobals.topLevelApplication.parameters;
+					httpService.url = flashvars.querySpringBeanUrl;
+					httpService.method = "POST";
+					var params:URLVariables = new URLVariables(); 
+					params.type = "IToolAppAction";
+					httpService.send(params);
+				} else {
+					instance.executeAction.dataProvider = Flow.executeActions;
+					var _action:String = instance.activity.executeAction;
+					if(_action != "") {
+						var len1:int = Flow.executeActions.length;
+						for(var i1:int=0; i1<len1; i1++) {
+							if(Flow.executeActions.getItemAt(i1).id == _action) {
+								instance.executeAction.selectedIndex = i1;
+								break;
+							}
+						}
+					} else
+						instance.executeAction.selectedIndex=0;
+				}
+				
+				if(instance.activity.finishType == "toolApp") {
+					instance.toolApp.selected = true;
+					instance.manual.selected = false;
+				} else {
+					instance.toolApp.selected = false;
+					instance.manual.selected = true;
+				}
+				
+				if(instance.activity.invokePattern == "synchronous") {
+					instance.synchronous.selected = true;
+					instance.asynchronous.selected = false;
+				} else {
+					instance.synchronous.selected = false;
+					instance.asynchronous.selected = true;
+					instance.joinID.enabled = false;
+				}
+				
+				if(instance.activity.transactionType == "join") {
+					instance.joinID.enabled = true;
+					instance.suspendID.selected = false;
+				} else {
+					instance.joinID.selected = false;
+					instance.suspendID.selected = true;
+				}
+				
+				if(instance.activity.invokePattern == "synchronous" && instance.activity.transactionType == "join") {
+					instance.rollbackID.enabled = true;
+					instance.interruptID.enabled = false;
+					instance.stepRollbackID.enabled = false;
+					instance.applicationID.enabled = false;	
+				} else if(instance.activity.invokePattern == "synchronous" && instance.activity.transactionType == "suspend") {
+					instance.rollbackID.enabled = true;
+					instance.interruptID.enabled = true;
+					instance.stepRollbackID.enabled = true;
+					instance.applicationID.enabled = true;	
+				} else if(instance.activity.invokePattern == "asynchronous" && instance.activity.transactionType == "suspend") {
+					instance.rollbackID.enabled = false;
+					instance.interruptID.enabled = false;
+					instance.stepRollbackID.enabled = false;
+					instance.applicationID.enabled = false;	
+				}
+				
+				if(Flow.exceptionActions == null) {
+					var httpService:HTTPService = new HTTPService();
+					httpService.addEventListener(ResultEvent.RESULT, resultExceptionActionHandler);
+					httpService.resultFormat = "xml";
+					var flashvars:Object = FlexGlobals.topLevelApplication.parameters;
+					httpService.url = flashvars.querySpringBeanUrl;
+					httpService.method = "POST";
+					var params:URLVariables = new URLVariables(); 
+					params.type = "IApplicationExecptionAction";
+					httpService.send(params);
+				} else {
+					instance.exceptionActionID.dataProvider = Flow.exceptionActions;
+					var _action:String = instance.activity.exceptionAction;
+					if(_action != "") {
+						var len1:int = Flow.exceptionActions.length;
+						for(var i1:int=0; i1<len1; i1++) {
+							if(Flow.exceptionActions.getItemAt(i1).id == _action) {
+								instance.exceptionActionID.selectedIndex = i1;
+								break;
+							}
+						}
+					} else
+						instance.exceptionActionID.selectedIndex=0;
+				}
+				
+				if(instance.activity.exceptionStrategy == "rollback")
+					instance.rollbackID.selected = true;
+				else if(instance.activity.exceptionStrategy == "ignore")
+					instance.ignoreID.selected = true;
+				else if(instance.activity.exceptionStrategy == "interrupt")
+					instance.interruptID.selected = true;
+				else if(instance.stepRollbackID.enabled == "stepRollback")
+					instance.stepRollbackID.enabled = true;
+				else if(instance.activity.exceptionStrategy == "application") {
+					instance.applicationID.selected = true;
+					instance.exceptionActionID.enabled = true;
+					//instance.exceptionActionID.text = instance.activity.exceptionAction;
+				}
+				
+				//------------------------------启动策略-------------------------------
+				if(Flow.activateRules == null) {
+					var httpService:HTTPService = new HTTPService();
+					httpService.addEventListener(ResultEvent.RESULT, resultActivateRuleHandler);
+					httpService.resultFormat = "xml";
+					var flashvars:Object = FlexGlobals.topLevelApplication.parameters;
+					httpService.url = flashvars.querySpringBeanUrl;
+					httpService.method = "POST";
+					var params:URLVariables = new URLVariables(); 
+					params.type = "IActivateRuleAction";
+					httpService.send(params);
+				} else {
+					instance.startStrategybyAppActionID.dataProvider = Flow.activateRules;
+					var _action:String = instance.activity.startStrategybyAppAction;
+					if(_action != "") {
+						var len1:int = Flow.activateRules.length;
+						for(var i1:int=0; i1<len1; i1++) {
+							if(Flow.activateRules.getItemAt(i1).id == _action) {
+								instance.startStrategybyAppActionID.selectedIndex = i1;
+								break;
+							}
+						}
+					} else
+						instance.startStrategybyAppActionID.selectedIndex=0;
+				}
+				
+				if(instance.activity.activateRuleType == "directRunning") {
+					instance.directRunningID.selected = true;
+					instance.waitingActivitionID.selected = false;
+					instance.startStrategybyAppID.selected = false;
+					instance.startStrategybyAppActionID.enabled = false;
+				} else if(instance.activity.activateRuleType == "waitingActivition") {
+					instance.directRunningID.selected = false;
+					instance.waitingActivitionID.selected = true;
+					instance.startStrategybyAppID.selected = false;
+					instance.startStrategybyAppActionID.enabled = false;
+				} else if(instance.activity.activateRuleType == "startStrategybyApp") {
+					instance.directRunningID.selected = false;
+					instance.waitingActivitionID.selected = false;
+					instance.startStrategybyAppID.selected = true;
+					instance.startStrategybyAppActionID.enabled = true;
+					//instance.startStrategybyAppActionID.text = instance.activity.startStrategybyAppAction;
+				}
+			}
+			
+			public function save(event:MouseEvent):void {
+				WindowManager.hide(instance);
+				//------------------------------基本属性-------------------------------
+				Flow.rcAct.id = actId.text;
+				Flow.rcAct.text = actName.text;
+				Flow.rcAct.activity.description = description.text;
+				
+				if(splitOR.selected)
+					activity.splitMode = "OR";
+				else if(splitAND.selected)
+					activity.splitMode = "AND";
+				else
+					activity.splitMode = "XOR";
+				
+				if(joinOR.selected)
+					activity.joinMode = "OR";
+				else if(joinAND.selected)
+					activity.joinMode = "AND";
+				else
+					activity.joinMode = "XOR";
+				
+				//------------------------------高级属性-------------------------------
+				activity.executeAction = executeAction.selectedItem.id;
+				if(synchronous.selected) {
+					activity.invokePattern = "synchronous";
+				} else {
+					activity.invokePattern = "asynchronous";
+				}
+				
+				if(toolApp.selected)
+					activity.finishType = "toolApp";
+				else
+					activity.finishType = "manual";
+				
+				if(joinID.selected) {
+					activity.transactionType = "join";
+				} else {
+					activity.transactionType = "suspend";
+				}
+				
+				if(rollbackID.selected)
+					activity.exceptionStrategy = "rollback";
+				else if(ignoreID.selected)
+					activity.exceptionStrategy = "ignore";
+				else if(interruptID.selected)
+					activity.exceptionStrategy = "interrupt";
+				else if(stepRollbackID.selected)
+					activity.exceptionStrategy = "stepRollback";
+				else if(applicationID.selected) {
+					activity.exceptionStrategy = "application";
+					activity.exceptionAction = exceptionActionID.selectedItem.id;
+				}				
+				//------------------------------启动策略-------------------------------
+				if(directRunningID.selected)
+					activity.activateRuleType = "directRunning";
+				else if(waitingActivitionID.selected)
+					activity.activateRuleType = "waitingActivition";
+				else if(startStrategybyAppID.selected) {
+					activity.activateRuleType = "startStrategybyApp";
+					activity.startStrategybyAppAction = startStrategybyAppActionID.selectedItem.id;
+				}
+				
+				ValidateProcessDefine.checkToolApp(Flow.rcAct);
+			}
+			
+			public function hide(event:MouseEvent):void {
+				WindowManager.hide(instance);
+			}
+			
+			public function init():void {
+				this.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandle);
+			}
+			
+			public function keyDownHandle(event:KeyboardEvent):void {
+				if (event.charCode == Keyboard.ESCAPE) {
+					hide(null);
+				} else if(event.charCode == Keyboard.ENTER) {
+					save(null);
+				}
+			}
+			
+			protected function activateRule_changeHandler(event:Event):void {
+				var radio:RadioButton = event.target as RadioButton;
+				if((startStrategybyAppID.selected && radio.id == "startStrategybyAppID")) { //流程启动者 or 相关数据区
+					startStrategybyAppActionID.enabled = true;
+				} else {
+					startStrategybyAppActionID.enabled = false;
+				}
+			}
+
+			protected function call_changeHandler(event:Event):void {
+				var radio:RadioButton = event.target as RadioButton;
+				if((toolApp.selected && radio.id == "synchronous")) { 
+					joinID.enabled = true;
+					
+					rollbackID.enabled = true;
+					interruptID.enabled = true;
+					stepRollbackID.enabled = true;
+					applicationID.enabled = true;	
+				} else {
+					joinID.enabled = false;
+					suspendID.selected = true;
+					
+					rollbackID.enabled = false;
+					ignoreID.selected = true;
+					interruptID.enabled = false;
+					stepRollbackID.enabled = false;
+					applicationID.enabled = false;	
+					exceptionActionID.enabled = false;
+				}
+			}
+			
+			protected function transaction_changeHandler(event:Event):void {
+				var radio:RadioButton = event.target as RadioButton;
+				if((toolApp.selected && radio.id == "joinID")) { 
+					ignoreID.selected = true;			
+					interruptID.enabled = false;
+					stepRollbackID.enabled = false;
+					applicationID.enabled = false;
+					exceptionActionID.enabled = false;
+				} else {
+					interruptID.enabled = true;
+					stepRollbackID.enabled = true;
+					applicationID.enabled = true;	
+				}
+			}
+			
+			protected function exception_changeHandler(event:Event):void {
+				var radio:RadioButton = event.target as RadioButton;
+				if((toolApp.selected && radio.id == "applicationID")) { 
+					exceptionActionID.enabled = true;
+				} else {
+					exceptionActionID.enabled = false;
+				}
+			}
+
+		]]>
+	</fx:Script>
+	
+	<s:Panel title="自动环节属性" width="100%" height="100%" backgroundColor="#D6E4E7">
+		<mx:TabNavigator id="tabNavigatorID" width = '100%' height = '100%' backgroundColor="#D6E4E7" borderVisible="false" bottom="30" x="0" creationPolicy="all">
+			<mx:VBox label = '基本属性'>
+				<mx:Form width="100%" height="100%">
+					<mx:FormItem label="环节ID" width="100%">
+						<s:TextInput width="80%" id="actId" enabled="false"/>
+					</mx:FormItem>
+					<mx:FormItem label="环节名称" width="100%">
+						<s:TextInput width="80%" id="actName"/>
+					</mx:FormItem>
+					<mx:FormItem label="分支模式" width="100%">
+						<s:HGroup>
+							<s:RadioButton groupName="split" label="单一分支" id="splitXOR"/>
+							<s:RadioButton groupName="split" label="多路分支" id="splitOR"/>
+							<s:RadioButton groupName="split" label="全部分支" id="splitAND"/>
+						</s:HGroup>
+					</mx:FormItem>
+					<mx:FormItem label="聚合模式" width="100%">
+						<s:HGroup>
+							<s:RadioButton groupName="join" label="单一聚合" id="joinXOR"/>
+							<s:RadioButton groupName="join" label="多路聚合" id="joinOR"/>
+							<s:RadioButton groupName="join" label="全部聚合" id="joinAND"/>
+						</s:HGroup>
+					</mx:FormItem>
+					<mx:FormItem label="描述" width="100%">
+						<s:TextArea height="100" width="80%" id="description"/>
+					</mx:FormItem>
+				</mx:Form>
+			</mx:VBox>
+			
+			<mx:VBox label = '高级属性'>
+				<mx:Form width="100%" height="100%">
+					<mx:FormItem label="执行逻辑">
+						<s:DropDownList width="252" id="executeAction" labelField="name"></s:DropDownList>
+					</mx:FormItem>
+					<mx:FormItem label="结束方式" height="25">
+						<s:HGroup width="200" height="28">
+							<s:RadioButton label="自动" groupName="group3" id="toolApp" selected="true" />
+							<s:RadioButton label="人工" groupName="group3" id="manual"/>
+						</s:HGroup>
+					</mx:FormItem>
+					<mx:FormItem label="调用方式" height="25">
+						<s:HGroup width="200" height="28">
+							<s:RadioButton label="同步" groupName="group2" id="synchronous" selected="true" change="call_changeHandler(event)" />
+							<s:RadioButton label="异步" groupName="group2" id="asynchronous" change="call_changeHandler(event)" />
+						</s:HGroup>
+					</mx:FormItem>
+					<mx:FormItem label="事务策略" height="25">
+						<s:HGroup width="200" height="28">
+							<s:RadioButton label="Join" groupName="group4" id="joinID" selected="true" change="transaction_changeHandler(event)"/>
+							<s:RadioButton label="Suspend" groupName="group4" id="suspendID" change="transaction_changeHandler(event)"/>
+						</s:HGroup>
+					</mx:FormItem>
+					<mx:FormItem label="异常处理策略">
+						<s:VGroup>
+							<s:RadioButton label="回滚异常" groupName="group5" selected="true" id="rollbackID" change="exception_changeHandler(event)"/>
+							<s:RadioButton label="忽略异常" groupName="group5" id="ignoreID" selected="true" change="exception_changeHandler(event)"/>
+							<s:RadioButton label="进入异常状态，等待人工干预" groupName="group5" id="interruptID" enabled="false" change="exception_changeHandler(event)"/>
+							<s:RadioButton label="自动执行单步回退，活动终止" groupName="group5" id="stepRollbackID" enabled="false" change="exception_changeHandler(event)"/>
+							<s:HGroup>
+								<s:RadioButton groupName="group5" label="自动执行规则逻辑" id="applicationID" enabled="false" change="exception_changeHandler(event)" />
+								<s:DropDownList width="317" id="exceptionActionID" enabled="false" labelField="name"></s:DropDownList>
+							</s:HGroup>
+						</s:VGroup>
+					</mx:FormItem>
+				</mx:Form>
+			</mx:VBox>
+			
+			<mx:VBox label = '触发事件'>
+				<mx:DataGrid width="100%" id="eventGrid" rowCount="8" editable="true"
+							 itemEditEnd="TriggerEventHelper.eventGrid_itemEditEndHandler(event)">
+					<mx:columns>
+						<mx:DataGridColumn headerText="触发时机" dataField="eventTypeName" width="80" 
+										   editorDataField="eventTypeNameSelected">
+							<mx:itemEditor>
+								<fx:Component>
+									<mx:HBox width="100%">          
+										<fx:Script>
+											<![CDATA[
+												import com.starflow.core.data.DataHolder;
+												import com.starflow.core.util.FlowUtil;
+												import spark.events.DropDownEvent;
+												[Bindable]
+												public var eventTypeNameSelected:String;
+												protected function eventTypeComboBoxID_closeHandler(event:DropDownEvent):void {
+													var obj:Object = eventTypeComboBoxID.selectedItem;
+													eventTypeNameSelected = obj.name;
+													data.eventType = obj.value;	
+												}
+											]]>
+										</fx:Script>
+										<s:ComboBox close="eventTypeComboBoxID_closeHandler(event)" 
+													render="FlowUtil.comboBox_renderHandler(eventTypeComboBoxID, data, 'eventType')" 
+													labelField="name" id="eventTypeComboBoxID" width="100%" dataProvider="{DataHolder.triggerActEvents}" />
+									</mx:HBox>
+								</fx:Component>
+							</mx:itemEditor>
+						</mx:DataGridColumn>
+						<mx:DataGridColumn headerText="事件动作" dataField="action"/>
+						<mx:DataGridColumn headerText="调用方式" dataField="invokePatternName" width="50" 
+										   editorDataField="invokePatternNameSelected">
+							<mx:itemEditor>
+								<fx:Component>
+									<mx:HBox width="100%">          
+										<fx:Script>
+											<![CDATA[
+												import com.starflow.core.data.DataHolder;
+												import com.starflow.core.util.FlowUtil;
+												import spark.events.DropDownEvent;
+												[Bindable]
+												public var invokePatternNameSelected:String;
+												protected function invokePatternComboBoxID_closeHandler(event:DropDownEvent):void {
+													var obj:Object = invokePatternComboBoxID.selectedItem;
+													invokePatternNameSelected = obj.name;
+													data.invokePattern = obj.value;	
+												}
+											]]>
+										</fx:Script>
+										<s:ComboBox close="invokePatternComboBoxID_closeHandler(event)" 
+													render="FlowUtil.comboBox_renderHandler(invokePatternComboBoxID, data, 'invokePattern')" 
+													labelField="name" id="invokePatternComboBoxID" width="100%" dataProvider="{DataHolder.invokePatterns}" />
+									</mx:HBox>
+								</fx:Component>
+							</mx:itemEditor>
+						</mx:DataGridColumn>
+						<mx:DataGridColumn headerText="事务策略" dataField="transactionType" width="50" 
+										   editorDataField="transactionTypeSelected">
+							<mx:itemEditor>
+								<fx:Component>
+									<mx:HBox width="100%">          
+										<fx:Script>
+											<![CDATA[
+												import com.starflow.core.data.DataHolder;
+												import com.starflow.core.util.FlowUtil;
+												import spark.events.DropDownEvent;
+												[Bindable]
+												public var transactionTypeSelected:String;
+												protected function transactionTypeComboBoxID_closeHandler(event:DropDownEvent):void {
+													var obj:Object = transactionTypeComboBoxID.selectedItem;
+													transactionTypeSelected = obj.value;
+													data.transactionType = obj.value;	
+												}
+											]]>
+										</fx:Script>
+										<s:ComboBox close="transactionTypeComboBoxID_closeHandler(event)" 
+													render="FlowUtil.comboBox_renderHandler(transactionTypeComboBoxID, data, 'transactionType')" 
+													labelField="value" id="transactionTypeComboBoxID" width="100%" dataProvider="{DataHolder.transactionTypes}" />
+									</mx:HBox>
+								</fx:Component>
+							</mx:itemEditor>
+						</mx:DataGridColumn>
+						<mx:DataGridColumn headerText="异常处理" dataField="exceptionStrategyName" width="60" 
+										   editorDataField="exceptionStrategyNameSelected">
+							<mx:itemEditor>
+								<fx:Component>
+									<mx:HBox width="100%">          
+										<fx:Script>
+											<![CDATA[
+												import com.starflow.core.data.DataHolder;
+												import com.starflow.core.util.FlowUtil;
+												import spark.events.DropDownEvent;
+												[Bindable]
+												public var exceptionStrategyNameSelected:String;
+												protected function exceptionStrategyComboBoxID_closeHandler(event:DropDownEvent):void {
+													var obj:Object = exceptionStrategyComboBoxID.selectedItem;
+													exceptionStrategyNameSelected = obj.name;
+													data.exceptionStrategy = obj.value;	
+												}
+											]]>
+										</fx:Script>
+										<s:ComboBox close="exceptionStrategyComboBoxID_closeHandler(event)" 
+													render="FlowUtil.comboBox_renderHandler(exceptionStrategyComboBoxID, data, 'exceptionStrategy')" 
+													labelField="name" id="exceptionStrategyComboBoxID" width="100%" dataProvider="{DataHolder.exceptionStrategys}" />
+									</mx:HBox>
+								</fx:Component>
+							</mx:itemEditor>
+						</mx:DataGridColumn>
+						<mx:DataGridColumn headerText="描述" dataField="description"/>
+					</mx:columns>
+				</mx:DataGrid>
+				<s:HGroup>
+					<s:Button label="添加" click="TriggerEventHelper.addEvent_clickHandler(event, eventGrid, 'toolApp')" />
+					<s:Button label="删除" click="TriggerEventHelper.removeEvent_clickHandler(event, eventGrid, 'toolApp')"/>
+				</s:HGroup>
+			</mx:VBox>
+			
+			<mx:VBox label = '启动策略'>
+				<mx:Form width="100%" height="100%">
+					<mx:FormItem label="启动规则">
+						<s:VGroup>
+							<s:RadioButton groupName="activateRule1" label="直接运行" id="directRunningID" selected="true" change="activateRule_changeHandler(event)"/>
+							<s:RadioButton groupName="activateRule1" label="待激活" id="waitingActivitionID" change="activateRule_changeHandler(event)"/>
+							<s:HGroup>
+								<s:RadioButton groupName="activateRule1" label="由规则逻辑返回值确定" id="startStrategybyAppID" change="activateRule_changeHandler(event)"/>
+								<s:DropDownList width="177" id="startStrategybyAppActionID" enabled="false" labelField="name"></s:DropDownList>
+							</s:HGroup>
+						</s:VGroup>
+					</mx:FormItem>
+				</mx:Form>
+			</mx:VBox>
+			
+			<mx:VBox label = '扩展属性'>
+				<mx:DataGrid width="100%" id="extendNodeGrid" rowCount="8" editable="true"
+							 itemEditEnd="ExtendNodeHelper.eventGrid_itemEditEndHandler(event)">
+					<mx:columns>
+						<mx:DataGridColumn headerText="名称值" dataField="key" width="100"/>
+						<mx:DataGridColumn headerText="值" dataField="value" width="100"/>
+						<mx:DataGridColumn headerText="描述" dataField="description"/>
+					</mx:columns>
+				</mx:DataGrid>
+				<s:HGroup>
+					<s:Button label="添加" click="ExtendNodeHelper.addEvent_clickHandler(event, extendNodeGrid, 'manual')" />
+					<s:Button label="删除" click="ExtendNodeHelper.removeEvent_clickHandler(event, extendNodeGrid, 'manual')"/>
+				</s:HGroup>
+			</mx:VBox>
+		</mx:TabNavigator>
+		<s:Button y="168" label="确定" click="save(event)" horizontalCenter="-50" bottom="8"/>
+		<s:Button y="168" label="取消" click="hide(event)" horizontalCenter="50" bottom="8"/>
+	</s:Panel>
+</s:Group>

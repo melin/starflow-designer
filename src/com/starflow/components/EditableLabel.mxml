@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="40" height="20"
+		 creationComplete="appComplete()">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.starflow.core.util.Flow;
+			
+			import mx.controls.Alert;
+			
+			import spark.components.supportClasses.ListBase;
+			
+			[Inspectable]
+			[Bindable]
+			public var text:String = "";
+			public var oldText:String = "";
+			private var isDD:Boolean = false;
+			
+			private function appComplete():void{   
+				this.addEventListener(KeyboardEvent.KEY_DOWN,btnOk_Enter);   
+			}
+			
+			//回车完成编辑
+			private function btnOk_Enter(event:KeyboardEvent):void {
+				if (event.charCode == 13)
+					onChange(event);
+			}
+			
+			private function onChange(event:Event):void {
+				if(isDD)
+					Flow.isDD = true;
+				isDD = false;
+					
+				isEdit(false);
+			}
+			
+			private function onEdit(event:Event):void {
+				//当鼠标选择文字时，避免图元拖动
+				if(Flow.isDD) {
+					Flow.isDD = false;
+					isDD = true;
+				}
+				
+				inputTxt.text = text;
+				oldText = text;
+				isEdit(true);
+				inputTxt.selectRange(0,inputTxt.text.length+1);
+				inputTxt.setFocus();
+			}
+			
+			private function isEdit(value:Boolean):void {
+				labelDisplay.visible = !value;
+				inputTxt.visible =  value;
+				if(!value && labelDisplay.text == "") {
+					labelDisplay.text = oldText;
+					inputTxt.text = oldText;
+				}
+					
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:Label id="labelDisplay" text="{text}" horizontalCenter="0" verticalCenter="0"
+			doubleClick="onEdit(event)" doubleClickEnabled="true"/>
+	
+	<s:TextInput id="inputTxt" visible="false" text="@{text}" horizontalCenter="0" verticalCenter="0" 
+			mouseFocusChange="onChange(event)"  contentBackgroundColor="#FFFFFF"/>
+</s:Group>

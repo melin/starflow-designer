@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>   
+<node>   
+	<node  id='1' name="保障" type="busi"/>
+	<node  id='hefeiSubflow' name="合肥子流程" type="subflow"/>
+</node>

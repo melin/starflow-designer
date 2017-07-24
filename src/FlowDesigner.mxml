@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:flow="com.starflow.components.*"
+			   preloader="com.starflow.core.support.FlowDownloadProgressBar"
+			   creationComplete="initApp()">
+	<fx:Style source="css/FlowDesigner.css"/>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.starflow.core.support.NewFlowManager;
+			import com.starflow.core.support.RightClickManager;
+			import com.starflow.core.support.UpdateFlowManager;
+			import com.starflow.core.util.Flow;
+			import com.starflow.event.handle.FlowElementDDHandler;
+			import com.starflow.event.handle.KeyboardHandler;
+			import com.starflow.event.handle.LineMovePointHandler;
+			import com.starflow.event.handle.LinkLineHandler;
+			
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.managers.DragManager;
+						
+			private var flowDDHandler:FlowElementDDHandler = FlowElementDDHandler.getInstance();
+			private var lineMovePointHandler:LineMovePointHandler = LineMovePointHandler.getInstance();
+			
+			private var lineHandler:LinkLineHandler = null;
+			private function initApp():void {
+					
+				lineHandler = new LinkLineHandler();
+				this.addEventListener(KeyboardEvent.KEY_DOWN, KeyboardHandler.getInstance().keyDownHandler);
+				
+				Flow.flowDesignerArea = flowDesignerArea;
+				
+				//更新流程定义 和 新建流程定义状态
+				var flashvars:Object = FlexGlobals.topLevelApplication.parameters; 
+				if(flashvars.status == "update") {
+					var updateFlowManager:UpdateFlowManager = new UpdateFlowManager();
+					updateFlowManager.openFlow();
+				} else{
+					var newFlowManager:NewFlowManager = new NewFlowManager();
+					newFlowManager.createFlow();
+				}
+				
+				//注销Flash默认右键菜单
+				RightClickManager.regist();
+			}
+			
+		]]>
+	</fx:Script>
+	
+		
+	<mx:HDividedBox width="100%" height="100%">
+		<flow:FlowPanel width="180" height="100%" flowDesignerArea="{flowDesignerArea}"/>
+		
+		<s:Panel  title="流程定制区域              作者：melin，Email：libinsong1204@gmail.com, Blog: http://melin.iteye.com/" height="100%">
+		<!--<s:Panel height="100%">-->
+			<s:SkinnableContainer id="flowDesignerArea" width="100%" height="100%" 
+					doubleClick="flowDDHandler.dbClickHandler(event)" doubleClickEnabled="true"
+					click="flowDDHandler.clickHandler(event)"
+					dragEnter="flowDDHandler.dragEnterHandler(event);" 
+					dragOver="flowDDHandler.dragOverHandler(event);"
+					dragDrop="flowDDHandler.dragDropHandler(event);" 
+					mouseDown="lineHandler.onMouseDown(event);"
+					mouseMove="lineHandler.onMouseMove(event);"
+					mouseUp="lineHandler.onMouseUp(event);"
+					skinClass="com.starflow.skins.FlowDesignerAreaSkin">
+			</s:SkinnableContainer>
+		</s:Panel>
+	</mx:HDividedBox>
+</s:Application>

@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="600" height="360"
+		 creationComplete="init()" xmlns:win="com.starflow.components.win.*">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+
+	<fx:Script>
+		<![CDATA[
+			import com.starflow.core.support.WindowManager;
+			import com.starflow.core.util.ExtendNodeHelper;
+			import com.starflow.core.util.Flow;
+			import com.starflow.core.util.TriggerEventHelper;
+			import com.starflow.model.Participant;
+			
+			import mx.collections.ArrayCollection;
+			
+			public static var instance:FlowWin = new FlowWin;
+			
+			public static function show():void {
+				WindowManager.show(instance);
+				instance.tabNavigatorID.selectedIndex=0;
+			}
+			
+			public function save(event:MouseEvent):void {
+				Flow.processDefine.name = fname.text;
+				Flow.processDefine.chname = chname.text;
+				Flow.processDefine.version = version.text;
+				if(limitTime.text == "")
+					limitTime.text = "0";
+				Flow.processDefine.limitTime = limitTime.text;
+				Flow.processDefine.description = description.text;
+				
+				//------------------------------流程启动者-------------------------------
+				if(processStarterAll.selected) { //流程启动者
+					Flow.processDefine.processStarterType = "all";
+				} else if (processStarterList.selected) { //组织机构与角色
+					Flow.processDefine.processStarterType = "org-role";
+				}
+				
+				WindowManager.hide(instance);
+			}
+			
+			public function hide(event:MouseEvent):void {
+				WindowManager.hide(instance);
+			}
+			
+			public function init():void {
+				fname.text = Flow.processDefine.name;
+				chname.text = Flow.processDefine.chname;
+				version.text = Flow.processDefine.version;
+				limitTime.text = Flow.processDefine.limitTime;
+				description.text = Flow.processDefine.description;
+				
+				//------------------------------流程启动者设置-------------------------------
+				instance.particiGrid.dataProvider = new ArrayCollection();
+				
+				//------------------------------触发事件-------------------------------
+				instance.eventGrid.dataProvider = Flow.processDefine.triggerEvents;
+				
+				//------------------------------扩展属性-------------------------------
+				instance.extendNodeGrid.dataProvider = Flow.processDefine.extendNodes;
+				
+				if(Flow.processDefine.processStarterType == "all") {
+					instance.processStarterAll.selected = true;
+					instance.particiGridGroup.enabled = false;
+					instance.processStarterList.selected = false;
+				} else if(Flow.processDefine.processStarterType == "org-role") {
+					instance.processStarterAll.selected = false;
+					instance.particiGridGroup.enabled = true;
+					instance.processStarterList.selected = true;
+					instance.particiGrid.dataProvider = Flow.processDefine.processStarters;
+				}
+				
+				this.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandle);
+			}
+			
+			public function keyDownHandle(event:KeyboardEvent):void {
+				if (event.charCode == Keyboard.ESCAPE) {
+					hide(null);
+				} else if(event.charCode == Keyboard.ENTER) {
+					save(null);
+				}
+			}
+
+			protected function generateVersion_clickHandler(event:MouseEvent):void {
+				var currentVersion:String = version.text;
+				var newVersion:String = "";
+				if(currentVersion == null || currentVersion == ""){
+					newVersion = "1.1.1";
+				}else{
+					var verNums:Array = currentVersion.split(".");
+					var third:int = int(verNums.pop());
+					var second:int = int(verNums.pop());
+					var first:int = int(verNums.pop());
+					if(third!=9){
+						newVersion =  first +"."+ second +"."+(third+1);
+					}
+					if(9==third && second!=9){
+						newVersion = first +"."+(second+1)+".1";
+					}
+					if(9==third && 9==second){
+						newVersion = (first+1)+".1.1";
+					}
+				}
+				version.text = newVersion;
+			}
+			
+			protected function partici_changeHandler(event:Event):void {
+				var radio:RadioButton = event.target as RadioButton;
+				if((processStarterAll.selected && radio.id == "processStarterAll")) {
+					particiGridGroup.enabled = false;
+				} else { //组织机构与角色
+					particiGridGroup.enabled = true;
+				}
+			}
+			
+			protected function deleteParticipant_clickHandler(event:MouseEvent):void {
+				if(particiGrid.selectedItem != null) {
+					var selectParticipant:Participant = particiGrid.selectedItem as Participant;
+					var len:int = Flow.processDefine.processStarters.length;
+					var participants:ArrayCollection = new ArrayCollection();
+					for(var i:int=0; i<len; i++) {
+						var participant:Participant = Flow.processDefine.processStarters.getItemAt(i) as Participant;
+						if(selectParticipant.id != participant.id) {
+							participants.addItem(participant);
+						} else if(selectParticipant.id == participant.id && selectParticipant.type != participant.type) {
+							participants.addItem(participant);
+						}
+					}
+					Flow.processDefine.processStarters = participants;
+					particiGrid.dataProvider = Flow.processDefine.processStarters;
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Panel title="流程属性" width="100%" height="100%" backgroundColor="#D6E4E7">
+		<mx:TabNavigator id="tabNavigatorID" width = '100%' height = '100%' backgroundColor="#D6E4E7" borderVisible="false" bottom="14" x="0" creationPolicy="all">
+			<mx:VBox label = '基本属性'>
+				<mx:Form x="0" width="100%" height="100%" bottom="22">
+					<mx:FormItem label="流程名称"  width="100%">
+						<s:TextInput width="100%" id="fname" enabled="false"/>
+					</mx:FormItem>
+					<mx:FormItem label="流程中文名称"  width="100%">
+						<s:TextInput width="100%" id="chname" enabled="false"/>
+					</mx:FormItem>
+					<mx:FormItem label="版本号"  width="100%">
+						<s:HGroup>
+							<s:TextInput width="126" id="version" enabled="false"/>
+							<s:Button id="generateVersion" label="新版本号" click="generateVersion_clickHandler(event)" />
+						</s:HGroup>
+					</mx:FormItem>
+					<mx:FormItem label="流程时限（分钟）"  width="100%">
+						<s:TextInput width="100%" id="limitTime" restrict="0-9"/>
+					</mx:FormItem>
+					<mx:FormItem label="描述" height="93"  width="100%">
+						<s:TextArea width="100%" height="92" id="description"/>
+					</mx:FormItem>
+				</mx:Form>
+			</mx:VBox>
+			<mx:VBox label = '触发事件'>
+				<mx:DataGrid width="100%" id="eventGrid" rowCount="8" editable="true"
+							 itemEditEnd="TriggerEventHelper.eventGrid_itemEditEndHandler(event)">
+					<mx:columns>
+						<mx:DataGridColumn headerText="触发时机" dataField="eventTypeName" width="80" 
+										   editorDataField="eventTypeNameSelected">
+							<mx:itemEditor>
+								<fx:Component>
+									<mx:HBox width="100%">          
+										<fx:Script>
+											<![CDATA[
+												import com.starflow.core.data.DataHolder;
+												import com.starflow.core.util.FlowUtil;
+												import spark.events.DropDownEvent;
+												[Bindable]
+												public var eventTypeNameSelected:String;
+												protected function eventTypeComboBoxID_closeHandler(event:DropDownEvent):void {
+													var obj:Object = eventTypeComboBoxID.selectedItem;
+													eventTypeNameSelected = obj.name;
+													data.eventType = obj.value;	
+												}
+											]]>
+										</fx:Script>
+										<s:ComboBox close="eventTypeComboBoxID_closeHandler(event)" 
+													render="FlowUtil.comboBox_renderHandler(eventTypeComboBoxID, data, 'eventType')" 
+													labelField="name" id="eventTypeComboBoxID" width="100%" dataProvider="{DataHolder.triggerFlowEvents}" />
+									</mx:HBox>
+								</fx:Component>
+							</mx:itemEditor>
+						</mx:DataGridColumn>
+						<mx:DataGridColumn headerText="事件动作" dataField="action"/>
+						<mx:DataGridColumn headerText="调用方式" dataField="invokePatternName" width="50" 
+										   editorDataField="invokePatternNameSelected">
+							<mx:itemEditor>
+								<fx:Component>
+									<mx:HBox width="100%">          
+										<fx:Script>
+											<![CDATA[
+												import com.starflow.core.data.DataHolder;
+												import com.starflow.core.util.FlowUtil;
+												import spark.events.DropDownEvent;
+												[Bindable]
+												public var invokePatternNameSelected:String;
+												protected function invokePatternComboBoxID_closeHandler(event:DropDownEvent):void {
+													var obj:Object = invokePatternComboBoxID.selectedItem;
+													invokePatternNameSelected = obj.name;
+													data.invokePattern = obj.value;	
+												}
+											]]>
+										</fx:Script>
+										<s:ComboBox close="invokePatternComboBoxID_closeHandler(event)" 
+													render="FlowUtil.comboBox_renderHandler(invokePatternComboBoxID, data, 'invokePattern')" 
+													labelField="name" id="invokePatternComboBoxID" width="100%" dataProvider="{DataHolder.invokePatterns}" />
+									</mx:HBox>
+								</fx:Component>
+							</mx:itemEditor>
+						</mx:DataGridColumn>
+						<mx:DataGridColumn headerText="事务策略" dataField="transactionType" width="50" 
+										   editorDataField="transactionTypeSelected">
+							<mx:itemEditor>
+								<fx:Component>
+									<mx:HBox width="100%">          
+										<fx:Script>
+											<![CDATA[
+												import com.starflow.core.data.DataHolder;
+												import com.starflow.core.util.FlowUtil;
+												import spark.events.DropDownEvent;
+												[Bindable]
+												public var transactionTypeSelected:String;
+												protected function transactionTypeComboBoxID_closeHandler(event:DropDownEvent):void {
+													var obj:Object = transactionTypeComboBoxID.selectedItem;
+													transactionTypeSelected = obj.value;
+													data.transactionType = obj.value;	
+												}
+											]]>
+										</fx:Script>
+										<s:ComboBox close="transactionTypeComboBoxID_closeHandler(event)" 
+													render="FlowUtil.comboBox_renderHandler(transactionTypeComboBoxID, data, 'transactionType')" 
+													labelField="value" id="transactionTypeComboBoxID" width="100%" dataProvider="{DataHolder.transactionTypes}" />
+									</mx:HBox>
+								</fx:Component>
+							</mx:itemEditor>
+						</mx:DataGridColumn>
+						<mx:DataGridColumn headerText="异常处理" dataField="exceptionStrategyName" width="60" 
+										   editorDataField="exceptionStrategyNameSelected">
+							<mx:itemEditor>
+								<fx:Component>
+									<mx:HBox width="100%">          
+										<fx:Script>
+											<![CDATA[
+												import com.starflow.core.data.DataHolder;
+												import com.starflow.core.util.FlowUtil;
+												import spark.events.DropDownEvent;
+												[Bindable]
+												public var exceptionStrategyNameSelected:String;
+												protected function exceptionStrategyComboBoxID_closeHandler(event:DropDownEvent):void {
+													var obj:Object = exceptionStrategyComboBoxID.selectedItem;
+													exceptionStrategyNameSelected = obj.name;
+													data.exceptionStrategy = obj.value;	
+												}
+											]]>
+										</fx:Script>
+										<s:ComboBox close="exceptionStrategyComboBoxID_closeHandler(event)" 
+													render="FlowUtil.comboBox_renderHandler(exceptionStrategyComboBoxID, data, 'exceptionStrategy')" 
+													labelField="name" id="exceptionStrategyComboBoxID" width="100%" dataProvider="{DataHolder.exceptionStrategys}" />
+									</mx:HBox>
+								</fx:Component>
+							</mx:itemEditor>
+						</mx:DataGridColumn>
+						<mx:DataGridColumn headerText="描述" dataField="description"/>
+					</mx:columns>
+				</mx:DataGrid>
+				<s:HGroup>
+					<s:Button label="添加" click="TriggerEventHelper.addEvent_clickHandler(event, eventGrid, 'flow')" />
+					<s:Button label="删除" click="TriggerEventHelper.removeEvent_clickHandler(event, eventGrid, 'flow')"/>
+				</s:HGroup>
+			</mx:VBox>
+			<mx:VBox label = '流程启动者'>
+				<mx:Form x="0" width="100%" height="100%" bottom="22">
+					<mx:FormItem>
+						<s:RadioButton groupName="processStarter" label="任意人员启动" id="processStarterAll" change="partici_changeHandler(event)"/>
+					</mx:FormItem>
+					<mx:FormItem>
+						<s:RadioButton groupName="processStarter" label="从参与者列表中获取" id="processStarterList" change="partici_changeHandler(event)"/>
+					</mx:FormItem>
+					<s:HGroup id="particiGridGroup">
+						<mx:DataGrid width="467" id="particiGrid" rowCount="6">
+							<mx:columns>
+								<mx:DataGridColumn headerText="参与者ID" dataField="id"/>
+								<mx:DataGridColumn headerText="名称" dataField="name"/>
+								<mx:DataGridColumn headerText="类型" dataField="typeName"/>
+							</mx:columns>
+						</mx:DataGrid>
+						<s:VGroup>
+							<s:Button label="添加" click="ParticiWin.show('flow')"/>
+							<s:Button label="删除" click="deleteParticipant_clickHandler(event)"/>
+						</s:VGroup>
+					</s:HGroup>
+				</mx:Form>
+			</mx:VBox>
+			<mx:VBox label = '扩展属性'>
+				<mx:DataGrid width="100%" id="extendNodeGrid" rowCount="8" editable="true"
+							 itemEditEnd="ExtendNodeHelper.eventGrid_itemEditEndHandler(event)">
+					<mx:columns>
+						<mx:DataGridColumn headerText="名称值" dataField="key" width="100"/>
+						<mx:DataGridColumn headerText="值" dataField="value" width="100"/>
+						<mx:DataGridColumn headerText="描述" dataField="description"/>
+					</mx:columns>
+				</mx:DataGrid>
+				<s:HGroup>
+					<s:Button label="添加" click="ExtendNodeHelper.addEvent_clickHandler(event, extendNodeGrid, 'flow')" />
+					<s:Button label="删除" click="ExtendNodeHelper.removeEvent_clickHandler(event, extendNodeGrid, 'flow')"/>
+				</s:HGroup>
+			</mx:VBox>
+		</mx:TabNavigator>
+		<s:Button label="确定" click="save(event)" id="submitBtn" horizontalCenter="-40" bottom="8"/>		
+		<s:Button label="取消" click="hide(event)" horizontalCenter="40" bottom="8"/>
+	</s:Panel>
+</s:Group>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessDefine name="test.flow" version="1.1.2" chname="测试流程">
+	<ProcessProperty>
+		<limitTime>0</limitTime>
+		<processStarterType>all</processStarterType>
+		<description></description>
+		<ProcessStarters>
+		</ProcessStarters>
+		<TriggerEvents>
+			<event eventType="before-start-proc" action="123" invokePattern="synchronous" transactionType="join" exceptionStrategy="rollback" description="" />
+			<event eventType="before-finish-proc" action="123123" invokePattern="synchronous" transactionType="join" exceptionStrategy="rollback" description="" />
+		</TriggerEvents>
+		<ExtendNodes>
+			<extendNode key="key" value="value" description="描述" />
+		</ExtendNodes>
+	</ProcessProperty>
+	<Activitys>
+		<Activity id="Act_1" type="manual" name="人工环节">
+			<splitMode>XOR</splitMode>
+			<joinMode>XOR</joinMode>
+			<participantType>org-role</participantType>
+			<particiLogic></particiLogic>
+			<particiSpecActID></particiSpecActID>
+			<Participants>
+				<participant id="melin" name="李斌松" type="person"/>
+			</Participants>
+			<isFreeActivity>false</isFreeActivity>
+			<freeRangeStrategy></freeRangeStrategy>
+			<FreeActivities>
+			</FreeActivities>
+			<isOnlyLimitedManualActivity>true</isOnlyLimitedManualActivity>
+			<wiMode>single</wiMode>
+			<workitemNumStrategy></workitemNumStrategy>
+			<finishRule></finishRule>
+			<finishRequiredPercent></finishRequiredPercent>
+			<finishRquiredNum></finishRquiredNum>
+			<limitTime></limitTime>
+			<activateRuleType>directRunning</activateRuleType>
+			<startStrategybyAppAction></startStrategybyAppAction>
+			<resetParticipant>originalParticipant</resetParticipant>
+			<action></action>
+			<Operaions>
+			</Operaions>
+			<TriggerEvents>
+				<event eventType="after-create-wi" action="123" invokePattern="synchronous" transactionType="join" exceptionStrategy="rollback" description="" />
+				<event eventType="after-finish-act" action="34" invokePattern="synchronous" transactionType="join" exceptionStrategy="rollback" description="" />
+			</TriggerEvents>
+			<ExtendNodes>
+				<extendNode key="key" value="value" description="描述" />
+			</ExtendNodes>
+			<description></description>
+			<position left="208" top="120"/>
+		</Activity>
+		<Activity id="Act_2" type="webservice" name="WebService环节">
+			<splitMode>XOR</splitMode>
+			<locationURL>http://localhost:9000/helloWorld?wsdl</locationURL>
+			<operation>sayHi</operation>
+			<Parameters>
+				<parameter name="greet" dataType="string" fillBack="false" mode="parameter" valueType="variable">
+					<value><![CDATA[ fm:test:<test></test> ]]></value>
+				</parameter>
+				<parameter name="name" dataType="string" fillBack="false" mode="parameter" value="melin" valueType="constant"/>
+				<parameter name="return" dataType="string" fillBack="true" mode="result" value="" valueType="variable"/>
+			</Parameters>
+			<SOAPParameters>
+				<parameter name="username" value="melin" valueType="constant"/>
+				<parameter name="password" value="000000" valueType="constant"/>
+			</SOAPParameters>
+			<joinMode>XOR</joinMode>
+			<invokePattern>synchronous</invokePattern>
+			<finishType>toolApp</finishType>
+			<transactionType>join</transactionType>
+			<exceptionStrategy>ignore</exceptionStrategy>
+			<exceptionAction></exceptionAction>
+			<activateRuleType>directRunning</activateRuleType>
+			<startStrategybyAppAction></startStrategybyAppAction>
+			<TriggerEvents>
+			</TriggerEvents>
+			<ExtendNodes>
+				<extendNode key="key" value="value" description="描述" />
+			</ExtendNodes>
+			<description></description>
+			<position left="352" top="120"/>
+		</Activity>
+		<Activity id="act_finish" type="finish" name="结束">
+			<joinMode>XOR</joinMode>
+			<activateRuleType>directRunning</activateRuleType>
+			<startStrategybyAppAction></startStrategybyAppAction>
+			<description></description>
+			<position left="500" top="120"/>
+		</Activity>
+		<Activity id="act_start" type="start" name="开始">
+			<splitMode>XOR</splitMode>
+			<action></action>
+			<Operaions>
+			</Operaions>
+			<description></description>
+			<position left="40" top="120"/>
+		</Activity>
+	</Activitys>
+	<Transitions>
+		<Transition id="Line_4" from="Act_2" to="act_finish" name="">
+			<isDefault>true</isDefault>
+			<isSimpleExpression>true</isSimpleExpression>
+			<leftValue></leftValue>
+			<compType>EQ</compType>
+			<rightValue></rightValue>
+			<complexExpressionValue><![CDATA[  ]]></complexExpressionValue>
+			<priority>40</priority>
+			<position points="372,140 520,140"/>
+			<description></description>
+		</Transition>
+		<Transition id="Line_3" from="Act_1" to="Act_2" name="">
+			<isDefault>true</isDefault>
+			<isSimpleExpression>true</isSimpleExpression>
+			<leftValue></leftValue>
+			<compType>EQ</compType>
+			<rightValue></rightValue>
+			<complexExpressionValue><![CDATA[  ]]></complexExpressionValue>
+			<priority>40</priority>
+			<position points="228,140 372,140"/>
+			<description></description>
+		</Transition>
+		<Transition id="Line_1" from="act_start" to="Act_1" name="">
+			<isDefault>true</isDefault>
+			<isSimpleExpression>true</isSimpleExpression>
+			<leftValue></leftValue>
+			<compType>EQ</compType>
+			<rightValue></rightValue>
+			<complexExpressionValue><![CDATA[  ]]></complexExpressionValue>
+			<priority>40</priority>
+			<position points="60,140 228,140"/>
+			<description></description>
+		</Transition>
+	</Transitions>
+</ProcessDefine>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   preloader="com.starflow.core.support.FlowDownloadProgressBar"
+			   creationComplete="initApp()">
+	
+	<fx:Style source="css/FlowDesigner.css"/>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.starflow.core.support.RightClickManager;
+			import com.starflow.core.support.ViewFlowManager;
+			import com.starflow.core.util.Flow;
+			
+			private function initApp():void {
+				Flow.isViewFlow = true;
+				Flow.flowDesignerArea = flowDesignerArea;
+				
+				var viewFlowManager:ViewFlowManager = new ViewFlowManager();
+				viewFlowManager.openFlow();
+				
+				//注销Flash默认右键菜单
+				RightClickManager.regist();
+			}
+				
+		]]>
+	</fx:Script>
+	
+	<s:Panel title="流程监控" height="100%" width="100%">
+		<s:SkinnableContainer id="flowDesignerArea" width="100%" height="100%"
+							  skinClass="com.starflow.skins.FlowDesignerAreaSkin">
+		</s:SkinnableContainer>
+	</s:Panel>
+</s:Application>

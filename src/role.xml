@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>   
+<node>   
+	<node  name='管理员角色' id="admin" type="role"/>
+	<node  name='用户角色' id="user" type="role"/>
+</node>

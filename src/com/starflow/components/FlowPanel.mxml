@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 creationComplete="creationCompleteHandler(event)">
+	<s:layout>
+		<s:VerticalLayout />
+	</s:layout>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.starflow.core.data.DataHolder;
+			import com.starflow.event.handle.ToolBarHandler;
+			
+			import mx.events.FlexEvent;
+			import mx.events.MenuEvent;
+			import mx.graphics.ImageSnapshot;
+			
+			import spark.components.SkinnableContainer;
+			import spark.primitives.BitmapImage;
+			
+			[Bindable]
+			[Embed(source="images/icons/save.png")]
+			public var saveIcon:Class;
+			
+			[Bindable]
+			[Embed(source="images/icons/config.png")]
+			public var configIcon:Class;
+			
+			[Bindable]
+			[Embed(source="images/icons/cursor.png")]
+			public var connectionIcon:Class;
+			
+			[Bindable]
+			[Embed(source="images/icons/photo.png")]
+			public var photoIcon:Class;
+			
+			[Bindable]
+			[Embed(source="images/icons/eye.png")]
+			public var eyeIcon:Class;
+			
+			[Inspectable]
+			public var flowDesignerArea:SkinnableContainer;
+
+
+			protected function creationCompleteHandler(event:FlexEvent):void {
+			}
+
+		]]>
+	</fx:Script>
+	
+	<mx:VBox verticalGap="1" width="100%">
+		<mx:MenuBar height="30" width="100%" focusEnabled="false"
+					labelField="@label" iconField="@icon" id="flowMenu" 
+					click="ToolBarHandler.itemClickHandler(event)">
+			<fx:XMLList>
+				<menuitem label="连线" icon="connectionIcon" />
+				<menuitem label="属性" icon="configIcon" />
+				<menuitem label="保存" icon="saveIcon" />
+			</fx:XMLList>
+		</mx:MenuBar>
+		<mx:MenuBar height="30" width="100%" focusEnabled="false"
+					labelField="@label" iconField="@icon"
+					click="ToolBarHandler.itemClickHandler(event)">
+			<fx:XMLList>
+				<menuitem label="截图" icon="photoIcon" />
+				<menuitem label="验证" icon="eyeIcon" />
+				<!--<menuitem label="测试" icon="photoIcon" /> -->
+			</fx:XMLList>
+		</mx:MenuBar>
+	</mx:VBox>
+	
+	<s:Panel title="环节图元" width="100%"  height="100%" backgroundColor="#F1F1F1">
+		<s:SkinnableDataContainer dataProvider="{DataHolder.getActImages()}" width="100%" 
+								  itemRenderer="com.starflow.itemRenderer.FlowElementItemRenderer">
+		</s:SkinnableDataContainer>
+	</s:Panel>
+</s:Group>
