@@ -2,7 +2,7 @@
 
 starflow 工作流设计器（flash）
 
-starflow 引擎：https://github.com/melin/starflow
+starflow 引擎： https://github.com/melin/starflow
 
 ![example1](https://github.com/melin/starflow-designer/blob/master/example1.jpg?raw=true)
 
